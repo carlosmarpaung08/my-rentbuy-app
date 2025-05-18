@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient'; // import supabase client
 
@@ -13,25 +13,34 @@ const RegisterForm = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [alertMessage, setAlertMessage] = useState(null);
 
   const navigate = useNavigate(); // untuk redirect setelah register sukses
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
+  // Menambahkan effect untuk auto-dismiss alert
+  useEffect(() => {
+    if (alertMessage) {
+      const timer = setTimeout(() => setAlertMessage(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [alertMessage]);
+
   // Fungsi handle submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
+    setAlertMessage(null);
 
     // Validasi sederhana
     if (!name || !email || !password || !confirmPassword) {
-      setErrorMessage('Semua field harus diisi');
+      setAlertMessage('Semua field harus diisi');
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage('Password dan konfirmasi password tidak sama');
+      setAlertMessage('Password dan konfirmasi password tidak sama');
       return;
     }
 
@@ -51,55 +60,85 @@ const RegisterForm = () => {
     setLoading(false);
 
     if (error) {
-      setErrorMessage(error.message);
+      setAlertMessage(error.message);
     } else {
-      alert('Registrasi berhasil! Silakan cek email untuk verifikasi.');
-      navigate('/login'); // redirect ke halaman login
+      setAlertMessage('Registrasi berhasil! Silakan cek email untuk verifikasi.');
+      setTimeout(() => {
+        navigate('/login'); // redirect ke halaman login setelah beberapa detik
+      }, 2000);
     }
   };
 
   return (
     <div style={styles.container}>
+      {alertMessage && (
+        <div style={styles.alertBox}>
+          {alertMessage}
+          <button onClick={() => setAlertMessage(null)} style={styles.alertClose} aria-label="Close alert">&times;</button>
+        </div>
+      )}
+      
       <div style={styles.formWrapper}>
         <div style={styles.card}>
+
           <div style={styles.header}>
             <div style={styles.waveContainer}>
-              {/* ... svg wave ... */}
+              {/* svg wave */}
             </div>
             <h2 style={styles.headerTitle}>Daftar Akun Baru</h2>
             <p style={styles.headerSubtitle}>Silakan isi data untuk mendaftar</p>
           </div>
 
           <form style={styles.form} onSubmit={handleSubmit}>
-            {errorMessage && <p style={{color:'red', textAlign:'center'}}>{errorMessage}</p>}
-
             <div style={styles.inputGroup}>
               <label htmlFor="name" style={styles.label}>Nama Lengkap</label>
-              <input
-                type="text"
-                id="name"
-                placeholder="Masukkan nama lengkap"
-                style={styles.input}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+              <div style={styles.inputWithIcon}>
+                <div style={styles.inputIcon}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  id="name"
+                  placeholder="Masukkan nama lengkap"
+                  style={styles.input}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
             </div>
 
             <div style={styles.inputGroup}>
               <label htmlFor="email" style={styles.label}>Email</label>
-              <input
-                type="email"
-                id="email"
-                placeholder="Masukkan email"
-                style={styles.input}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <div style={styles.inputWithIcon}>
+                <div style={styles.inputIcon}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </div>
+                <input
+                  type="email"
+                  id="email"
+                  placeholder="Masukkan email"
+                  style={styles.input}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
             </div>
 
             <div style={styles.inputGroup}>
               <label htmlFor="password" style={styles.label}>Password</label>
               <div style={styles.inputWithIcon}>
+                <div style={styles.inputIcon}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
@@ -130,6 +169,12 @@ const RegisterForm = () => {
             <div style={styles.inputGroup}>
               <label htmlFor="confirmPassword" style={styles.label}>Konfirmasi Password</label>
               <div style={styles.inputWithIcon}>
+                <div style={styles.inputIcon}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   id="confirmPassword"
@@ -182,36 +227,35 @@ const styles = {
     alignItems: 'center',
     background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
     padding: '1rem',
+    paddingTop: '5rem', // Menambahkan padding top untuk menghindari navbar
   },
   formWrapper: {
     width: '100%',
     maxWidth: '28rem',
-    marginTop: '6rem',
+    paddingTop: '2rem',
+    marginTop: '2rem',
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: '0.75rem',
-    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
     overflow: 'hidden',
-    border: '1px solid rgba(209,213,219,0.5)',
+    border: '1px solid rgba(209, 213, 219, 0.5)'
   },
-   header: {
+  header: {
     background: 'linear-gradient(to right, #FFB30E)',
     padding: '1.5rem',
     position: 'relative',
-    paddingBottom: '3rem', 
   },
   waveContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     width: '100%',
-    overflow: 'visible',
   },
   wave: {
     width: '100%',
     height: '4rem',
-    marginTop: '-1rem',
   },
   headerTitle: {
     fontSize: '1.5rem',
@@ -223,7 +267,7 @@ const styles = {
     zIndex: 10,
   },
   headerSubtitle: {
-    color: 'rgba(219,234,254,1)',
+    color: 'rgba(219, 234, 254, 1)',
     textAlign: 'center',
     fontSize: '0.875rem',
     position: 'relative',
@@ -231,7 +275,7 @@ const styles = {
   },
   form: {
     padding: '2rem',
-     paddingTop: '3.5rem',
+    paddingTop: '1.5rem',
   },
   inputGroup: {
     marginBottom: '1.5rem',
@@ -243,13 +287,26 @@ const styles = {
     fontSize: '0.875rem',
     fontWeight: '500',
   },
+  labelFlex: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '0.25rem',
+  },
   inputWithIcon: {
     position: 'relative',
+  },
+  inputIcon: {
+    position: 'absolute',
+    top: '50%',
+    left: '0.75rem',
+    transform: 'translateY(-50%)',
+    pointerEvents: 'none',
   },
   input: {
     width: '100%',
     padding: '0.75rem',
-    paddingLeft: '1rem',
+    paddingLeft: '2.5rem',
     fontSize: '0.875rem',
     borderRadius: '0.5rem',
     border: '1px solid #D1D5DB',
@@ -275,7 +332,7 @@ const styles = {
     fontWeight: '600',
     fontSize: '1rem',
     cursor: 'pointer',
-    boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     transition: 'transform 0.2s, box-shadow 0.2s',
     marginBottom: '1.5rem',
   },
@@ -291,6 +348,65 @@ const styles = {
     fontWeight: '600',
     transition: 'color 0.2s',
   },
+  // Menambahkan styling alert sesuai dengan OrderDetail.js
+  alertBox: {
+    position: "fixed",
+    top: 30,
+    left: "50%",
+    transform: "translateX(-50%)",
+    backgroundColor: "#28a745",
+    color: "#fff",
+    padding: "16px 28px",
+    borderRadius: 30,
+    boxShadow: "0 6px 16px rgba(40,167,69,0.5)",
+    fontSize: 16,
+    fontWeight: "700",
+    zIndex: 10000,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    maxWidth: 360,
+    userSelect: "none",
+    animation: "slideDown 0.4s ease-out",
+  },
+  alertClose: {
+    background: "transparent",
+    border: "none",
+    color: "#fff",
+    fontSize: 20,
+    cursor: "pointer",
+    padding: 0,
+    lineHeight: 1,
+  },
 };
+
+// Tambahkan CSS animation global
+const addGlobalStyles = () => {
+  if (!document.getElementById('register-animations')) {
+    const styleSheet = document.createElement("style");
+    styleSheet.id = 'register-animations';
+    styleSheet.type = "text/css";
+    styleSheet.innerText = `
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideDown {
+      from { opacity: 0; transform: translate(-50%, -20px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    `;
+    document.head.appendChild(styleSheet);
+  }
+};
+
+// Call the function to add global styles
+addGlobalStyles();
 
 export default RegisterForm;

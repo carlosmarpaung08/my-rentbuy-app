@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
@@ -26,9 +27,11 @@ const products = [
 
 const ProductPage = () => {
   const [user, setUser] = useState(null);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Auth listener
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
     });
@@ -37,8 +40,16 @@ const ProductPage = () => {
       setUser(session?.user ?? null);
     });
 
+    // Responsive listener
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+
     return () => {
       authListener.subscription.unsubscribe();
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -50,10 +61,21 @@ const ProductPage = () => {
     }
   };
 
+  const getGridColumns = () => {
+    if (windowWidth < 576) return '1fr';
+    if (windowWidth < 768) return 'repeat(2, 1fr)'; 
+    if (windowWidth < 992) return 'repeat(3, 1fr)';
+    if (windowWidth < 1200) return 'repeat(4, 1fr)';
+    return 'repeat(5, 1fr)'; 
+  };
+
   return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>Daftar Produk</h2>
-      <div style={styles.grid}>
+    <div style={{...styles.container, paddingTop: "100px"}}>
+      <h2 style={styles.title}>List of Products</h2>
+      <div style={{
+        ...styles.grid,
+        gridTemplateColumns: getGridColumns()
+      }}>
         {products.map((product) => (
           <div key={product.id} style={styles.card}>
             <img
@@ -84,6 +106,7 @@ const styles = {
     padding: "40px 20px",
     maxWidth: 1200,
     margin: "0 auto",
+    paddingTop: "100px",
   },
   title: {
     textAlign: "center",
@@ -92,7 +115,6 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))",
     gap: 20,
   },
   card: {
@@ -101,6 +123,11 @@ const styles = {
     padding: 15,
     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
     textAlign: "center",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    ":hover": {
+      transform: "translateY(-5px)",
+      boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+    }
   },
   image: {
     width: "100%",
@@ -112,6 +139,10 @@ const styles = {
     fontSize: 16,
     margin: "0 0 10px",
     color: "#333",
+    height: "40px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   price: {
     fontWeight: "600",
